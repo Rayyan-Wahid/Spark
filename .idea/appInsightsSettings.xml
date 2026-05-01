@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.spark" />
+                  <option name="mobileSdkAppId" value="1:744990907039:android:212d528fb856404e70e0aa" />
+                  <option name="projectId" value="dating-app-51396" />
+                  <option name="projectNumber" value="744990907039" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

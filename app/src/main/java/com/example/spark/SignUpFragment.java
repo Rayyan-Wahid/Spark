@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class SignUpFragment extends Fragment {
 
-    private TextInputEditText etName, etEmail, etPassword;
+    private TextInputEditText etName, etEmail, etPassword, etConfirmPassword;
     private MaterialButton btnSignup;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
@@ -41,8 +41,9 @@ public class SignUpFragment extends Fragment {
         etName = view.findViewById(R.id.et_name);
         etEmail = view.findViewById(R.id.et_email);
         etPassword = view.findViewById(R.id.et_password);
+        etConfirmPassword = view.findViewById(R.id.et_confirm_password);
         btnSignup = view.findViewById(R.id.btn_signup);
-        progressBar = view.findViewById(R.id.progress_bar);
+        progressBar = view.findViewById(R.id.progress_bar_signup);
 
         btnSignup.setOnClickListener(v -> createAccount());
 
@@ -53,29 +54,39 @@ public class SignUpFragment extends Fragment {
         String name = etName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
+        String confirmPassword = etConfirmPassword.getText().toString().trim();
 
         if (TextUtils.isEmpty(name)) {
             etName.setError("Name is required");
+            etName.requestFocus();
             return;
         }
 
         if (TextUtils.isEmpty(email)) {
             etEmail.setError("Email is required");
+            etEmail.requestFocus();
             return;
         }
 
         if (TextUtils.isEmpty(password)) {
             etPassword.setError("Password is required");
+            etPassword.requestFocus();
             return;
         }
 
         if (password.length() < 6) {
             etPassword.setError("Password must be at least 6 characters");
+            etPassword.requestFocus();
             return;
         }
 
-        progressBar.setVisibility(View.VISIBLE);
-        btnSignup.setEnabled(false);
+        if (!password.equals(confirmPassword)) {
+            etConfirmPassword.setError("Passwords do not match");
+            etConfirmPassword.requestFocus();
+            return;
+        }
+
+        showLoading(true);
 
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(requireActivity(), task -> {
@@ -83,10 +94,11 @@ public class SignUpFragment extends Fragment {
                         String userId = mAuth.getCurrentUser().getUid();
                         saveUserToDatabase(userId, name, email);
                     } else {
-                        progressBar.setVisibility(View.GONE);
-                        btnSignup.setEnabled(true);
-                        Toast.makeText(getContext(), "Registration failed: " + task.getException().getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        showLoading(false);
+                        String errorMsg = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Unknown error";
+                        Toast.makeText(getContext(), "Registration failed: " + errorMsg, Toast.LENGTH_LONG).show();
                     }
                 });
     }
@@ -99,16 +111,30 @@ public class SignUpFragment extends Fragment {
 
         mDatabase.child("users").child(userId).setValue(user)
                 .addOnCompleteListener(task -> {
-                    progressBar.setVisibility(View.GONE);
-                    btnSignup.setEnabled(true);
+                    showLoading(false);
                     if (task.isSuccessful()) {
-                        Toast.makeText(getContext(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(getActivity(), MainActivity.class));
-                        requireActivity().finish();
+                        Toast.makeText(getContext(), "Welcome to Spark, " + name + "! ✨", Toast.LENGTH_SHORT).show();
+                        navigateToDashboard();
                     } else {
-                        Toast.makeText(getContext(), "Failed to save user data: " + task.getException().getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        String errorMsg = task.getException() != null
+                                ? task.getException().getMessage()
+                                : "Unknown error";
+                        Toast.makeText(getContext(), "Failed to save profile: " + errorMsg, Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    private void navigateToDashboard() {
+        Intent intent = new Intent(getActivity(), DashboardActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    private void showLoading(boolean loading) {
+        if (progressBar != null) {
+            progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+        btnSignup.setEnabled(!loading);
+        btnSignup.setText(loading ? "Creating account…" : "Sign Up");
     }
 }

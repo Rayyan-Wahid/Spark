@@ -47,15 +47,9 @@ public class ProfileFragment extends Fragment {
         tvAboutMe = view.findViewById(R.id.tv_profile_about_me);
         chipGroupInterests = view.findViewById(R.id.profile_chip_group_interests);
 
-        LinearLayout btnLogout = view.findViewById(R.id.btn_logout_section);
-        if (btnLogout != null) {
-            btnLogout.setOnClickListener(v -> {
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(getActivity(), AuthActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-                getActivity().finish();
-            });
+        TextView tvLogout = view.findViewById(R.id.tv_logout);
+        if (tvLogout != null) {
+            tvLogout.setOnClickListener(v -> showLogoutConfirmation());
         }
 
         com.google.android.material.button.MaterialButton btnEditProfile = view.findViewById(R.id.btn_edit_profile);
@@ -70,6 +64,21 @@ public class ProfileFragment extends Fragment {
         fetchProfileData();
 
         return view;
+    }
+
+    private void showLogoutConfirmation() {
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Logout")
+                .setMessage("Are you sure you want to logout?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    FirebaseAuth.getInstance().signOut();
+                    Intent intent = new Intent(getActivity(), AuthActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    getActivity().finish();
+                })
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
     private void fetchProfileData() {

@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.tabs.TabLayout;
@@ -26,6 +27,9 @@ public class AuthActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+
+        // Hide System UI for Immersive Mode
+        hideSystemUI();
         setContentView(R.layout.activity_auth);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.auth_container).getParent() instanceof android.view.View ? (android.view.View) findViewById(R.id.auth_container).getParent() : null, (v, insets) -> {
@@ -81,5 +85,16 @@ public class AuthActivity extends AppCompatActivity {
             textView.getPaint().setShader(textShader);
             textView.invalidate();
         });
+    }
+
+    private void hideSystemUI() {
+        WindowInsetsControllerCompat windowInsetsController =
+                ViewCompat.getWindowInsetsController(getWindow().getDecorView());
+        if (windowInsetsController != null) {
+            windowInsetsController.setSystemBarsBehavior(
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
+        }
     }
 }

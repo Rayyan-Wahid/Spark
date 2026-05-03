@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
@@ -35,6 +36,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Hide System UI for Immersive Mode
+        hideSystemUI();
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -141,5 +145,18 @@ public class MainActivity extends AppCompatActivity {
                 android.graphics.Shader.TileMode.CLAMP);
         textView.getPaint().setShader(textShader);
         textView.invalidate();
+    }
+
+    private void hideSystemUI() {
+        WindowInsetsControllerCompat windowInsetsController =
+                ViewCompat.getWindowInsetsController(getWindow().getDecorView());
+        if (windowInsetsController != null) {
+            // Configure the behavior of the hidden system bars
+            windowInsetsController.setSystemBarsBehavior(
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
+            // Hide both the status bar and the navigation bar
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars());
+        }
     }
 }

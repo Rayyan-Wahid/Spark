@@ -42,6 +42,9 @@
         <activity
             android:name=".LikeRequestsActivity"
             android:exported="false" />
+        <activity
+            android:name=".ViewProfileActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

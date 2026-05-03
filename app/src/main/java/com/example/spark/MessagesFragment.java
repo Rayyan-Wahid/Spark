@@ -146,7 +146,6 @@ public class MessagesFragment extends Fragment {
         mDatabase.child("users").child(myId).child("matchedUserIds").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                matchList.clear();
                 List<String> matchIds = new ArrayList<>();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     String matchId = ds.getValue(String.class);
@@ -154,34 +153,58 @@ public class MessagesFragment extends Fragment {
                 }
 
                 if (matchIds.isEmpty()) {
+                    matchList.clear();
                     matchAdapter.notifyDataSetChanged();
                     return;
                 }
 
-                // Fetch details for each mutual match
-                for (String id : matchIds) {
-                    mDatabase.child("users").child(id).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot userSnapshot) {
-                            ProfileModel profile = userSnapshot.getValue(ProfileModel.class);
-                            if (profile != null) {
-                                boolean exists = false;
-                                for (ProfileModel p : matchList) {
-                                    if (p.getId().equals(profile.getId())) {
-                                        exists = true;
-                                        break;
-                                    }
-                                }
-                                if (!exists) {
-                                    matchList.add(profile);
-                                    matchAdapter.notifyDataSetChanged();
-                                }
+                // Now filter out users with whom we already have a conversation
+                mDatabase.child("messages").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot messagesSnapshot) {
+                        matchList.clear();
+                        for (String id : matchIds) {
+                            // Deterministic conversation ID logic
+                            List<String> pair = new ArrayList<>();
+                            pair.add(myId);
+                            pair.add(id);
+                            java.util.Collections.sort(pair);
+                            String convId = pair.get(0) + "_" + pair.get(1);
+
+                            // If conversation DOES NOT exist, add to New Matches
+                            if (!messagesSnapshot.hasChild(convId)) {
+                                fetchProfileForNewMatch(id);
                             }
                         }
+                    }
 
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {}
-                    });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    private void fetchProfileForNewMatch(String userId) {
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot userSnapshot) {
+                ProfileModel profile = userSnapshot.getValue(ProfileModel.class);
+                if (profile != null) {
+                    boolean exists = false;
+                    for (ProfileModel p : matchList) {
+                        if (p.getId().equals(profile.getId())) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        matchList.add(profile);
+                        matchAdapter.notifyDataSetChanged();
+                    }
                 }
             }
 

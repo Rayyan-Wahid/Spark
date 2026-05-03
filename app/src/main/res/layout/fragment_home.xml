@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
+        android:layout_marginTop="@dimen/header_margin_top"
         app:layout_constraintTop_toTopOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -19,59 +20,18 @@
             android:layout_height="match_parent"
             android:paddingEnd="16dp">
 
-            <ImageView
-                android:id="@+id/btn_menu"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_menu"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
             <TextView
                 android:id="@+id/toolbar_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Match &amp; Chat"
                 android:textColor="@color/pink_primary"
-                android:textSize="22sp"
+                android:textSize="32sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <RelativeLayout
-                android:id="@+id/notification_container"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <ImageView
-                    android:id="@+id/btn_notification"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_centerInParent="true"
-                    android:src="@drawable/ic_notification" />
-
-                <TextView
-                    android:id="@+id/tv_notification_count"
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_alignParentTop="true"
-                    android:background="@drawable/bg_avatar_circle"
-                    android:backgroundTint="@color/pink_primary"
-                    android:gravity="center"
-                    android:text="0"
-                    android:textColor="@color/white"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:visibility="gone"
-                    tools:visibility="visible" />
-            </RelativeLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>

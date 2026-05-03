@@ -9,50 +9,30 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingHorizontal="24dp"
+        android:paddingTop="@dimen/header_margin_top">
 
         <!-- Top Bar -->
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_menu"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Spark"
-                android:textColor="@color/pink_primary"
-                android:textSize="22sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                app:cardCornerRadius="16dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-                <ImageView
-                    android:id="@+id/profile_image_small"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/heart" />
-            </com.google.android.material.card.MaterialCardView>
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_height="wrap_content"
+            android:text="Profile"
+            android:gravity="center"
+            android:textColor="@color/pink_primary"
+            android:textSize="32sp"
+            android:textStyle="bold" />
 
         <!-- Profile Image -->
-        <FrameLayout
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp">
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="160dp"
                 android:layout_height="160dp"
@@ -93,12 +73,14 @@
             android:layout_marginTop="4dp"
             android:text="Graphic Designer &amp; Coffee Enthusiast"
             android:textColor="@color/text_secondary" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_gravity="center">
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_edit_profile"
                 android:layout_width="wrap_content"
@@ -235,7 +217,7 @@
                     android:layout_height="64dp"
                     android:gravity="center_vertical"
                     android:paddingHorizontal="12dp"
-                    android:layout_marginBottom="50dp"
+                    android:layout_marginBottom="70dp"
                     android:orientation="horizontal"
                     >
                     <ImageView

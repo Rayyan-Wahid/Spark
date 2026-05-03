@@ -183,26 +183,100 @@ public class CreateProfileActivity extends AppCompatActivity {
     }
 
     private void setupInterests() {
+        // Add common interests
         for (String interest : commonInterests) {
-            Chip chip = new Chip(this);
-            chip.setText(interest);
-            chip.setCheckable(true);
+            addChipToGroup(interest, false);
+        }
+
+        // Add "Add Custom" button chip
+        Chip addCustomChip = new Chip(this);
+        addCustomChip.setText("+ Add Custom");
+        addCustomChip.setChipBackgroundColorResource(R.color.bg_color);
+        addCustomChip.setTextColor(ContextCompat.getColor(this, R.color.pink_primary));
+        addCustomChip.setChipStrokeColorResource(R.color.pink_primary);
+        addCustomChip.setChipStrokeWidth(2f);
+        
+        addCustomChip.setOnClickListener(v -> showAddCustomInterestDialog());
+        chipGroupInterests.addView(addCustomChip);
+    }
+
+    private void addChipToGroup(String interest, boolean isChecked) {
+        Chip chip = new Chip(this);
+        chip.setText(interest);
+        chip.setCheckable(true);
+        chip.setChecked(isChecked);
+        
+        // Style based on initial state
+        updateChipStyle(chip, isChecked);
+
+        chip.setOnCheckedChangeListener((buttonView, checked) -> {
+            if (checked) {
+                selectedInterests.add(interest);
+            } else {
+                selectedInterests.remove(interest);
+            }
+            updateChipStyle(chip, checked);
+        });
+
+        // Add before the "+ Add Custom" chip
+        int childCount = chipGroupInterests.getChildCount();
+        chipGroupInterests.addView(chip, childCount > 0 ? childCount - 1 : 0);
+        
+        if (isChecked && !selectedInterests.contains(interest)) {
+            selectedInterests.add(interest);
+        }
+    }
+
+    private void updateChipStyle(Chip chip, boolean isChecked) {
+        if (isChecked) {
+            chip.setChipBackgroundColorResource(R.color.pink_primary);
+            chip.setTextColor(ContextCompat.getColor(this, R.color.white));
+        } else {
             chip.setChipBackgroundColorResource(R.color.bg_color);
             chip.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-            
-            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    selectedInterests.add(interest);
-                    chip.setChipBackgroundColorResource(R.color.pink_primary);
-                    chip.setTextColor(ContextCompat.getColor(this, R.color.white));
-                } else {
-                    selectedInterests.remove(interest);
-                    chip.setChipBackgroundColorResource(R.color.bg_color);
-                    chip.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-                }
-            });
-            chipGroupInterests.addView(chip);
         }
+    }
+
+    private void showAddCustomInterestDialog() {
+        EditText etCustomInterest = new EditText(this);
+        etCustomInterest.setHint("Enter interest (e.g. Hiking)");
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        
+        android.widget.FrameLayout container = new android.widget.FrameLayout(this);
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, 
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        params.leftMargin = padding;
+        params.rightMargin = padding;
+        etCustomInterest.setLayoutParams(params);
+        container.addView(etCustomInterest);
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Add Custom Interest")
+                .setView(container)
+                .setPositiveButton("Add", (dialog, which) -> {
+                    String custom = etCustomInterest.getText().toString().trim();
+                    if (!TextUtils.isEmpty(custom)) {
+                        // Check if already exists in selected list or common list to avoid duplicates
+                        boolean exists = false;
+                        for (int i = 0; i < chipGroupInterests.getChildCount(); i++) {
+                            View view = chipGroupInterests.getChildAt(i);
+                            if (view instanceof Chip) {
+                                if (((Chip) view).getText().toString().equalsIgnoreCase(custom)) {
+                                    ((Chip) view).setChecked(true);
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!exists) {
+                            addChipToGroup(custom, true);
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void setupBioCounter() {

@@ -12,6 +12,8 @@ import com.bumptech.glide.Glide;
 
 import java.util.List;
 
+import android.content.Intent;
+
 public class DiscoverAdapter extends RecyclerView.Adapter<DiscoverAdapter.ViewHolder> {
     private List<ProfileModel> profileList;
     private OnProfileActionListener actionListener;
@@ -58,7 +60,9 @@ public class DiscoverAdapter extends RecyclerView.Adapter<DiscoverAdapter.ViewHo
         });
 
         holder.itemView.setOnClickListener(v -> {
-            if (actionListener != null) actionListener.onProfileClick(profile);
+            Intent intent = new Intent(v.getContext(), ViewProfileActivity.class);
+            intent.putExtra("USER_ID", profile.getId());
+            v.getContext().startActivity(intent);
         });
     }
 

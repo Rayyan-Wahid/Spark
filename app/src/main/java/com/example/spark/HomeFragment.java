@@ -33,7 +33,7 @@ public class HomeFragment extends Fragment {
 
     private MaterialCardView profileCard;
     private ImageView ivProfileImage;
-    private TextView tvName, tvDistance, tvBio, tvNotificationCount;
+    private TextView tvName, tvDistance, tvBio;
     private com.google.android.material.chip.ChipGroup chipGroupInterests;
     private FloatingActionButton btnRewind, btnDislike, btnLike;
 
@@ -55,6 +55,13 @@ public class HomeFragment extends Fragment {
 
         // Initialize UI
         profileCard = view.findViewById(R.id.profile_card);
+        profileCard.setOnClickListener(v -> {
+            if (currentProfile != null) {
+                Intent intent = new Intent(getActivity(), ViewProfileActivity.class);
+                intent.putExtra("USER_ID", currentProfile.getId());
+                startActivity(intent);
+            }
+        });
         ivProfileImage = view.findViewById(R.id.profile_image);
         tvName = view.findViewById(R.id.tv_profile_name);
         tvDistance = view.findViewById(R.id.tv_profile_distance);
@@ -64,18 +71,9 @@ public class HomeFragment extends Fragment {
         btnRewind = view.findViewById(R.id.btn_rewind);
         btnDislike = view.findViewById(R.id.btn_dislike);
         btnLike = view.findViewById(R.id.btn_like);
-        tvNotificationCount = view.findViewById(R.id.tv_notification_count);
-
-        View notificationContainer = view.findViewById(R.id.notification_container);
-        if (notificationContainer != null) {
-            notificationContainer.setOnClickListener(v -> {
-                startActivity(new Intent(getActivity(), LikeRequestsActivity.class));
-            });
-        }
 
         // Fetch My Current Matches First
         fetchMyMatches();
-        setupNotificationCount();
 
         // Action Listeners
         btnRewind.setOnClickListener(v -> skipProfile());
@@ -83,25 +81,6 @@ public class HomeFragment extends Fragment {
         btnLike.setOnClickListener(v -> likeProfile());
 
         return view;
-    }
-
-    private void setupNotificationCount() {
-        String myId = mAuth.getCurrentUser().getUid();
-        mDatabase.child("users").child(myId).child("likedByUids").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                long count = snapshot.getChildrenCount();
-                if (count > 0) {
-                    tvNotificationCount.setVisibility(View.VISIBLE);
-                    tvNotificationCount.setText(String.valueOf(count));
-                } else {
-                    tvNotificationCount.setVisibility(View.GONE);
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
     }
 
     private void fetchMyMatches() {
@@ -342,7 +321,6 @@ public class HomeFragment extends Fragment {
         if (currentProfile == null || isAnimating) return;
         isAnimating = true;
 
-        // Animation: Slide Out Top
         profileCard.animate()
                 .translationY(-1000)
                 .alpha(0)

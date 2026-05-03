@@ -13,36 +13,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/header_margin_top"
-        android:gravity="center_vertical"
+        android:gravity="center"
         android:orientation="horizontal"
         app:layout_constraintTop_toTopOf="parent">
 
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            app:cardCornerRadius="20dp">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/heart" />
-        </com.google.android.material.card.MaterialCardView>
-
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_weight="1"
             android:text="Messages"
             android:textColor="@color/pink_primary"
-            android:textSize="28sp"
+            android:textSize="32sp"
             android:textStyle="bold" />
-
-        <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:src="@drawable/ic_menu"
-            app:tint="@color/text_secondary" />
     </LinearLayout>
 
     <androidx.core.widget.NestedScrollView

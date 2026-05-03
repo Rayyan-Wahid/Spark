@@ -21,9 +21,9 @@ import com.google.firebase.auth.FirebaseAuth;
 public class DashboardActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
-    private FrameLayout navHome, navDiscover, navMessages, navProfile;
-    private View homeIndicator, discoverIndicator, messagesIndicator, profileIndicator;
-    private ImageView homeIcon, discoverIcon, messagesIcon, profileIcon;
+    private FrameLayout navHome, navDiscover, navMessages, navLikes, navProfile;
+    private View homeIndicator, discoverIndicator, messagesIndicator, likesIndicator, profileIndicator;
+    private ImageView homeIcon, discoverIcon, messagesIcon, likesIcon, profileIcon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,16 +51,19 @@ public class DashboardActivity extends AppCompatActivity {
         navHome = findViewById(R.id.nav_home);
         navDiscover = findViewById(R.id.nav_discover);
         navMessages = findViewById(R.id.nav_messages);
+        navLikes = findViewById(R.id.nav_likes);
         navProfile = findViewById(R.id.nav_profile);
 
         homeIndicator = findViewById(R.id.home_indicator);
         discoverIndicator = findViewById(R.id.discover_indicator);
         messagesIndicator = findViewById(R.id.messages_indicator);
+        likesIndicator = findViewById(R.id.likes_indicator);
         profileIndicator = findViewById(R.id.profile_indicator);
 
         homeIcon = findViewById(R.id.home_icon);
         discoverIcon = findViewById(R.id.discover_icon);
         messagesIcon = findViewById(R.id.messages_icon);
+        likesIcon = findViewById(R.id.likes_icon);
         profileIcon = findViewById(R.id.profile_icon);
 
         // Default fragment
@@ -70,6 +73,7 @@ public class DashboardActivity extends AppCompatActivity {
         navHome.setOnClickListener(v -> selectTab("HOME"));
         navDiscover.setOnClickListener(v -> selectTab("DISCOVER"));
         navMessages.setOnClickListener(v -> selectTab("MESSAGES"));
+        navLikes.setOnClickListener(v -> selectTab("LIKES"));
         navProfile.setOnClickListener(v -> selectTab("PROFILE"));
     }
 
@@ -78,11 +82,13 @@ public class DashboardActivity extends AppCompatActivity {
         homeIndicator.setVisibility(View.GONE);
         discoverIndicator.setVisibility(View.GONE);
         messagesIndicator.setVisibility(View.GONE);
+        likesIndicator.setVisibility(View.GONE);
         profileIndicator.setVisibility(View.GONE);
 
         homeIcon.setColorFilter(getResources().getColor(R.color.text_secondary));
         discoverIcon.setColorFilter(getResources().getColor(R.color.text_secondary));
         messagesIcon.setColorFilter(getResources().getColor(R.color.text_secondary));
+        likesIcon.setColorFilter(getResources().getColor(R.color.text_secondary));
         profileIcon.setColorFilter(getResources().getColor(R.color.text_secondary));
 
         Fragment fragment = null;
@@ -101,6 +107,11 @@ public class DashboardActivity extends AppCompatActivity {
                 messagesIndicator.setVisibility(View.VISIBLE);
                 messagesIcon.setColorFilter(getResources().getColor(R.color.white));
                 fragment = new MessagesFragment();
+                break;
+            case "LIKES":
+                likesIndicator.setVisibility(View.VISIBLE);
+                likesIcon.setColorFilter(getResources().getColor(R.color.white));
+                fragment = new LikesFragment();
                 break;
             case "PROFILE":
                 profileIndicator.setVisibility(View.VISIBLE);

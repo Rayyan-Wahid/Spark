@@ -78,7 +78,7 @@ public class AuthActivity extends AppCompatActivity {
                     0, 0, textView.getPaint().measureText(textView.getText().toString()), textView.getTextSize(),
                     new int[]{
                             getResources().getColor(R.color.pink_primary, getTheme()),
-                            getResources().getColor(R.color.purple_outline, getTheme())
+                            getResources().getColor(R.color.pink_light, getTheme())
                     },
                     new float[]{0f, 1f},
                     android.graphics.Shader.TileMode.CLAMP);

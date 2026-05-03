@@ -26,7 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 
 public class ProfileFragment extends Fragment {
 
-    private ImageView ivProfilePic, ivProfilePicSmall;
+    private ImageView ivProfilePic;
     private TextView tvNameAge, tvBioSummary, tvAboutMe;
     private ChipGroup chipGroupInterests;
     private FirebaseAuth mAuth;
@@ -41,7 +41,6 @@ public class ProfileFragment extends Fragment {
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         ivProfilePic = view.findViewById(R.id.profile_image);
-        ivProfilePicSmall = view.findViewById(R.id.profile_image_small);
         tvNameAge = view.findViewById(R.id.tv_profile_name_age);
         tvBioSummary = view.findViewById(R.id.tv_profile_bio_summary);
         tvAboutMe = view.findViewById(R.id.tv_profile_about_me);
@@ -133,17 +132,8 @@ public class ProfileFragment extends Fragment {
                         .error(R.drawable.heart)
                         .into(ivProfilePic);
             }
-            if (ivProfilePicSmall != null) {
-                Glide.with(this)
-                        .load(profile.getProfileImageUrl())
-                        .circleCrop()
-                        .placeholder(R.drawable.heart)
-                        .error(R.drawable.heart)
-                        .into(ivProfilePicSmall);
-            }
         } else {
             if (ivProfilePic != null) ivProfilePic.setImageResource(R.drawable.heart);
-            if (ivProfilePicSmall != null) ivProfilePicSmall.setImageResource(R.drawable.heart);
         }
 
         // Update interests chips

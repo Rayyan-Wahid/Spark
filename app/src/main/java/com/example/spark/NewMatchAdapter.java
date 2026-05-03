@@ -1,5 +1,6 @@
 package com.example.spark;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,15 +52,21 @@ public class NewMatchAdapter extends RecyclerView.Adapter<NewMatchAdapter.ViewHo
         }
 
         holder.itemView.setOnClickListener(v -> {
-            PopupMenu popup = new PopupMenu(holder.itemView.getContext(), v);
+            androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(v.getContext(), v);
             popup.getMenu().add("Show Profile");
             popup.getMenu().add("Start Messaging");
-            
+
             popup.setOnMenuItemClickListener(item -> {
                 if (item.getTitle().equals("Show Profile")) {
-                    listener.onShowProfile(match);
+                    Intent intent = new Intent(v.getContext(), ViewProfileActivity.class);
+                    intent.putExtra("USER_ID", match.getId());
+                    v.getContext().startActivity(intent);
                 } else if (item.getTitle().equals("Start Messaging")) {
-                    listener.onStartMessaging(match);
+                    Intent intent = new Intent(v.getContext(), ChatActivity.class);
+                    intent.putExtra("OTHER_USER_ID", match.getId());
+                    intent.putExtra("OTHER_USER_NAME", match.getName());
+                    intent.putExtra("OTHER_USER_IMAGE", match.getProfileImageUrl());
+                    v.getContext().startActivity(intent);
                 }
                 return true;
             });

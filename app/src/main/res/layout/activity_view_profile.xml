@@ -71,6 +71,16 @@
                 tools:text="2 miles away" />
 
             <TextView
+                android:id="@+id/tv_view_profile_gender"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/pink_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Male" />
+
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"

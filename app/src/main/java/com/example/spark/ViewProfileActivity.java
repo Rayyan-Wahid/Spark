@@ -30,7 +30,7 @@ import java.util.List;
 public class ViewProfileActivity extends AppCompatActivity {
 
     private ImageView ivProfilePic, btnBack;
-    private TextView tvNameAge, tvDistance, tvBio;
+    private TextView tvNameAge, tvDistance, tvBio, tvGender;
     private ChipGroup chipGroup;
     private MaterialButton btnMatch;
     private String otherUserId;
@@ -64,6 +64,7 @@ public class ViewProfileActivity extends AppCompatActivity {
         tvNameAge = findViewById(R.id.tv_view_profile_name_age);
         tvDistance = findViewById(R.id.tv_view_profile_distance);
         tvBio = findViewById(R.id.tv_view_profile_bio);
+        tvGender = findViewById(R.id.tv_view_profile_gender);
         chipGroup = findViewById(R.id.view_profile_chip_group);
         btnMatch = findViewById(R.id.btn_view_profile_match);
 
@@ -79,6 +80,7 @@ public class ViewProfileActivity extends AppCompatActivity {
                 if (profile != null) {
                     tvNameAge.setText(profile.getName() + ", " + profile.getAge());
                     tvDistance.setText(profile.getDistance() != null ? profile.getDistance() : "Near you");
+                    tvGender.setText(profile.getGender() != null ? profile.getGender() : "Not specified");
                     tvBio.setText(profile.getBio() != null ? profile.getBio() : "No bio provided.");
                     
                     if (profile.getProfileImageUrl() != null && !profile.getProfileImageUrl().isEmpty()) {

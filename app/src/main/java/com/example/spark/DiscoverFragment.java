@@ -108,6 +108,7 @@ public class DiscoverFragment extends Fragment {
         mDatabase.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 profileList.clear();
                 for (DataSnapshot postSnapshot : snapshot.getChildren()) {
                     ProfileModel profile = postSnapshot.getValue(ProfileModel.class);

@@ -16,6 +16,7 @@ public class ProfileModel {
     private boolean profileCompleted;
     private List<String> matchedUserIds;
     private List<String> likedByUids; // UIDs of users who liked this user
+    private String gender;
 
     public ProfileModel() {
         // Required for Firebase
@@ -33,9 +34,10 @@ public class ProfileModel {
         this.likedByUids = new java.util.ArrayList<>();
         this.isPublic = true;
         this.profileCompleted = false;
+        this.gender = "Prefer not to say";
     }
 
-    public ProfileModel(String id, String name, int age, String bio, List<String> interests, boolean isPublic, String profileImageUrl) {
+    public ProfileModel(String id, String name, int age, String bio, List<String> interests, boolean isPublic, String profileImageUrl, String gender) {
         this.id = id;
         this.name = name;
         this.age = age;
@@ -46,6 +48,7 @@ public class ProfileModel {
         this.profileCompleted = true;
         this.matchedUserIds = new java.util.ArrayList<>();
         this.likedByUids = new java.util.ArrayList<>();
+        this.gender = gender;
     }
 
     public List<String> getLikedByUids() { return likedByUids; }
@@ -89,4 +92,7 @@ public class ProfileModel {
 
     public boolean isPublic() { return isPublic; }
     public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 }

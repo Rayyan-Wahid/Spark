@@ -57,6 +57,10 @@ public class AuthActivity extends AppCompatActivity {
             }
         }).attach();
 
+        // Ensure we start on the correct tab (0 = Login, 1 = Sign Up)
+        int targetTab = getIntent().getIntExtra("TARGET_TAB", 0);
+        viewPager.setCurrentItem(targetTab, false);
+
         // Apply Gradient to Spark Text
         applyGradient(sparkText);
 
@@ -65,7 +69,7 @@ public class AuthActivity extends AppCompatActivity {
             authContainer.setTranslationY(authContainer.getHeight());
             authContainer.animate()
                     .translationY(0)
-                    .setDuration(600)
+                    .setDuration(300) // Reduced from 600ms for faster feel
                     .setInterpolator(new DecelerateInterpolator())
                     .start();
         });

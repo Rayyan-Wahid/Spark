@@ -86,6 +86,7 @@ public class MessagesFragment extends Fragment {
         mDatabase.child("messages").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 chatList.clear();
                 for (DataSnapshot chatRoomSnapshot : snapshot.getChildren()) {
                     String chatRoomId = chatRoomSnapshot.getKey();
@@ -124,6 +125,7 @@ public class MessagesFragment extends Fragment {
         mDatabase.child("users").child(otherUserId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 ProfileModel profile = snapshot.getValue(ProfileModel.class);
                 if (profile != null) {
                     chat.setName(profile.getName());
@@ -146,6 +148,7 @@ public class MessagesFragment extends Fragment {
         mDatabase.child("users").child(myId).child("matchedUserIds").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 List<String> matchIds = new ArrayList<>();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     String matchId = ds.getValue(String.class);
@@ -162,6 +165,7 @@ public class MessagesFragment extends Fragment {
                 mDatabase.child("messages").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot messagesSnapshot) {
+                        if (!isAdded()) return;
                         matchList.clear();
                         for (String id : matchIds) {
                             // Deterministic conversation ID logic
@@ -192,6 +196,7 @@ public class MessagesFragment extends Fragment {
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot userSnapshot) {
+                if (!isAdded()) return;
                 ProfileModel profile = userSnapshot.getValue(ProfileModel.class);
                 if (profile != null) {
                     boolean exists = false;

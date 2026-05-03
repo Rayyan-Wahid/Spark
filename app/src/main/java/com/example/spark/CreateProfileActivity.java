@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -53,6 +55,7 @@ public class CreateProfileActivity extends AppCompatActivity {
     private MaterialButton btnComplete;
     private ImageView ivProfilePic;
     private FloatingActionButton btnAddPhoto;
+    private RadioGroup rgGender;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private Uri selectedImageUri;
@@ -109,6 +112,7 @@ public class CreateProfileActivity extends AppCompatActivity {
         ivProfilePic = findViewById(R.id.iv_profile_pic);
         btnAddPhoto = findViewById(R.id.btn_add_photo);
         progressBar = findViewById(R.id.progress_bar);
+        rgGender = findViewById(R.id.rg_gender);
 
         isEditMode = getIntent().getBooleanExtra("IS_EDIT_MODE", false);
         if (isEditMode) {
@@ -148,6 +152,13 @@ public class CreateProfileActivity extends AppCompatActivity {
                     etBio.setText(profile.getBio());
                     switchPublic.setChecked(profile.isPublic());
                     existingImageUrl = profile.getProfileImageUrl();
+
+                    // Set gender
+                    if (profile.getGender() != null) {
+                        if (profile.getGender().equals("Male")) rgGender.check(R.id.rb_male);
+                        else if (profile.getGender().equals("Female")) rgGender.check(R.id.rb_female);
+                        else rgGender.check(R.id.rb_other);
+                    }
 
                     // Pre-select interests
                     if (profile.getInterests() != null) {
@@ -311,8 +322,9 @@ public class CreateProfileActivity extends AppCompatActivity {
 
         if (selectedImageUri == null) {
             String userId = mAuth.getCurrentUser().getUid();
+            String gender = getSelectedGender();
             if (isEditMode && existingImageUrl != null) {
-                saveProfileToDatabase(userId, name, Integer.parseInt(ageStr), bio, existingImageUrl);
+                saveProfileToDatabase(userId, name, Integer.parseInt(ageStr), bio, existingImageUrl, gender);
             } else {
                 Toast.makeText(this, "Please upload a photo", Toast.LENGTH_SHORT).show();
             }
@@ -342,8 +354,9 @@ public class CreateProfileActivity extends AppCompatActivity {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos); // 70% quality for smaller size
                 byte[] b = baos.toByteArray();
                 String base64Image = "data:image/jpeg;base64," + Base64.encodeToString(b, Base64.NO_WRAP);
+                String gender = getSelectedGender();
 
-                runOnUiThread(() -> saveProfileToDatabase(userId, name, Integer.parseInt(ageStr), bio, base64Image));
+                runOnUiThread(() -> saveProfileToDatabase(userId, name, Integer.parseInt(ageStr), bio, base64Image, gender));
 
             } catch (IOException e) {
                 runOnUiThread(() -> {
@@ -362,11 +375,11 @@ public class CreateProfileActivity extends AppCompatActivity {
         btnAddPhoto.setEnabled(!loading);
     }
 
-    private void saveProfileToDatabase(String userId, String name, int age, String bio, String imageUrl) {
+    private void saveProfileToDatabase(String userId, String name, int age, String bio, String imageUrl, String gender) {
         boolean isPublic = switchPublic.isChecked();
         
         // Creating the full profile model with all info and UID
-        ProfileModel profile = new ProfileModel(userId, name, age, bio, selectedInterests, isPublic, imageUrl);
+        ProfileModel profile = new ProfileModel(userId, name, age, bio, selectedInterests, isPublic, imageUrl, gender);
         profile.setProfileCompleted(true);
 
         mDatabase.child("users").child(userId).setValue(profile)
@@ -386,6 +399,13 @@ public class CreateProfileActivity extends AppCompatActivity {
                         Toast.makeText(this, "Database Error: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private String getSelectedGender() {
+        int selectedId = rgGender.getCheckedRadioButtonId();
+        if (selectedId == R.id.rb_male) return "Male";
+        if (selectedId == R.id.rb_female) return "Female";
+        return "Prefer not to say";
     }
 
     private void hideSystemUI() {

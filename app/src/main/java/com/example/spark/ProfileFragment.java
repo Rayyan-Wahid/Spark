@@ -27,7 +27,7 @@ import com.google.firebase.database.ValueEventListener;
 public class ProfileFragment extends Fragment {
 
     private ImageView ivProfilePic;
-    private TextView tvNameAge, tvBioSummary, tvAboutMe;
+    private TextView tvNameAge, tvBioSummary, tvAboutMe, tvGender;
     private ChipGroup chipGroupInterests;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -44,11 +44,12 @@ public class ProfileFragment extends Fragment {
         tvNameAge = view.findViewById(R.id.tv_profile_name_age);
         tvBioSummary = view.findViewById(R.id.tv_profile_bio_summary);
         tvAboutMe = view.findViewById(R.id.tv_profile_about_me);
+        tvGender = view.findViewById(R.id.tv_profile_gender);
         chipGroupInterests = view.findViewById(R.id.profile_chip_group_interests);
 
         TextView tvLogout = view.findViewById(R.id.tv_logout);
         if (tvLogout != null) {
-            tvLogout.setOnClickListener(v -> showLogoutConfirmation());
+            tvLogout.setOnClickListener(v -> performLogout());
         }
 
         com.google.android.material.button.MaterialButton btnEditProfile = view.findViewById(R.id.btn_edit_profile);
@@ -65,19 +66,16 @@ public class ProfileFragment extends Fragment {
         return view;
     }
 
-    private void showLogoutConfirmation() {
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Logout")
-                .setMessage("Are you sure you want to logout?")
-                .setPositiveButton("Yes", (dialog, which) -> {
-                    FirebaseAuth.getInstance().signOut();
-                    Intent intent = new Intent(getActivity(), AuthActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
-                    getActivity().finish();
-                })
-                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
-                .show();
+    private void performLogout() {
+        androidx.fragment.app.FragmentActivity activity = getActivity();
+        if (activity != null) {
+            FirebaseAuth.getInstance().signOut();
+            Intent intent = new Intent(activity, AuthActivity.class);
+            intent.putExtra("TARGET_TAB", 0); // 0 is LoginFragment
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+            activity.finish();
+        }
     }
 
     private void fetchProfileData() {
@@ -89,7 +87,7 @@ public class ProfileFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     ProfileModel profile = snapshot.getValue(ProfileModel.class);
-                    if (profile != null) {
+                    if (profile != null && isAdded()) {
                         updateUI(profile);
                     }
                 }
@@ -107,6 +105,10 @@ public class ProfileFragment extends Fragment {
         
         if (profile.getName() != null) {
             tvNameAge.setText(profile.getName() + (profile.getAge() > 0 ? ", " + profile.getAge() : ""));
+        }
+
+        if (tvGender != null && profile.getGender() != null) {
+            tvGender.setText(profile.getGender());
         }
         
         if (profile.getBio() != null && !profile.getBio().isEmpty()) {

@@ -46,14 +46,6 @@
                     android:scaleType="centerCrop"
                     android:src="@drawable/heart" />
             </com.google.android.material.card.MaterialCardView>
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:src="@drawable/ic_arrow_right"
-                app:backgroundTint="@color/pink_primary"
-                app:fabSize="mini"
-                app:tint="@color/white" />
         </FrameLayout>
 
         <TextView
@@ -64,6 +56,16 @@
             android:text="Name, Age"
             android:textColor="@color/text_primary"
             android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_profile_gender"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Gender"
+            android:textColor="@color/pink_primary"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <TextView

@@ -88,6 +88,7 @@ public class HomeFragment extends Fragment {
         mDatabase.child("users").child(myId).child("matchedUserIds").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 myMatches.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     String matchId = ds.getValue(String.class);
@@ -106,6 +107,7 @@ public class HomeFragment extends Fragment {
         mDatabase.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 profileList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     ProfileModel profile = ds.getValue(ProfileModel.class);

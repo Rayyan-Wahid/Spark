@@ -72,6 +72,7 @@
                 app:tint="@color/text_secondary" />
 
             <EditText
+                android:id="@+id/et_discover_search"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginStart="8dp"

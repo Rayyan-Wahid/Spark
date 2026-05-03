@@ -87,26 +87,29 @@ public class LoginFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 showLoading(false);
 
-                String name = "Sparker";
                 if (snapshot.exists()) {
-                    String fetched = snapshot.child("name").getValue(String.class);
-                    if (fetched != null && !fetched.isEmpty()) {
-                        name = fetched;
+                    Boolean profileCompleted = snapshot.child("profileCompleted").getValue(Boolean.class);
+                    String name = snapshot.child("name").getValue(String.class);
+                    
+                    if (profileCompleted != null && profileCompleted) {
+                        Toast.makeText(getContext(), "Welcome back, " + (name != null ? name : "Sparker") + "!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(getActivity(), DashboardActivity.class));
+                    } else {
+                        // User exists but hasn't finished profile setup
+                        startActivity(new Intent(getActivity(), CreateProfileActivity.class));
                     }
+                } else {
+                    // New user from social login or missing data
+                    startActivity(new Intent(getActivity(), CreateProfileActivity.class));
                 }
-
-                Toast.makeText(getContext(), "Welcome back, " + name + "!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(getActivity(), DashboardActivity.class));
                 requireActivity().finish();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                progressBar.setVisibility(View.GONE);
+                showLoading(false);
                 btnLogin.setEnabled(true);
-                // Even if fetch fails, we logged in successfully, so proceed
-                startActivity(new Intent(getActivity(), DashboardActivity.class));
-                requireActivity().finish();
+                Toast.makeText(getContext(), "Database error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

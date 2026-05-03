@@ -107,19 +107,21 @@ public class SignUpFragment extends Fragment {
         Map<String, Object> user = new HashMap<>();
         user.put("name", name);
         user.put("email", email);
-        user.put("uid", userId);
+        user.put("id", userId); // Use 'id' to match ProfileModel
+        user.put("profileCompleted", false); // Initial status
 
         mDatabase.child("users").child(userId).setValue(user)
                 .addOnCompleteListener(task -> {
                     showLoading(false);
                     if (task.isSuccessful()) {
-                        Toast.makeText(getContext(), "Welcome to Spark, " + name + "! ✨", Toast.LENGTH_SHORT).show();
-                        navigateToDashboard();
+                        Toast.makeText(getContext(), "Account Created Successfully", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(getActivity(), CreateProfileActivity.class));
+                        requireActivity().finish();
                     } else {
                         String errorMsg = task.getException() != null
                                 ? task.getException().getMessage()
                                 : "Unknown error";
-                        Toast.makeText(getContext(), "Failed to save profile: " + errorMsg, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Failed to save user data: " + errorMsg, Toast.LENGTH_LONG).show();
                     }
                 });
     }

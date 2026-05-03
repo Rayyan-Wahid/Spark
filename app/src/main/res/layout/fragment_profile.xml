@@ -40,6 +40,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent">
                 <ImageView
+                    android:id="@+id/profile_image_small"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
@@ -59,6 +60,7 @@
                 app:strokeColor="@color/pink_primary"
                 app:strokeWidth="3dp">
                 <ImageView
+                    android:id="@+id/profile_image"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:scaleType="centerCrop"
@@ -75,15 +77,17 @@
         </FrameLayout>
 
         <TextView
+            android:id="@+id/tv_profile_name_age"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Sophie, 24"
+            android:text="Name, Age"
             android:textColor="@color/text_primary"
             android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tv_profile_bio_summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
@@ -96,6 +100,7 @@
             android:layout_marginTop="24dp"
             android:orientation="horizontal">
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_edit_profile"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Edit Profile"
@@ -103,6 +108,7 @@
                 app:backgroundTint="@color/pink_primary"
                 app:cornerRadius="24dp" />
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_share_profile"
                 style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -133,11 +139,12 @@
                     android:textSize="18sp"
                     android:textStyle="bold" />
                 <TextView
+                    android:id="@+id/tv_profile_about_me"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:lineSpacingExtra="4dp"
-                    android:text="Passionate about modern design, good typography, and exploring new coffee shops around the city."
+                    android:text="No bio provided."
                     android:textColor="@color/text_secondary" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -161,49 +168,23 @@
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
-                
+
                 <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/profile_chip_group_interests"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     app:chipSpacingHorizontal="8dp"
                     app:chipSpacingVertical="4dp">
-                    
-                    <com.google.android.material.chip.Chip
-                        style="@style/Widget.MaterialComponents.Chip.Action"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Design"
-                        app:chipBackgroundColor="#FFF0F5"
-                        app:chipCornerRadius="12dp"
-                        app:chipStrokeWidth="0dp" />
 
                     <com.google.android.material.chip.Chip
-                        style="@style/Widget.MaterialComponents.Chip.Action"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Coffee"
-                        app:chipBackgroundColor="#FFF0F5"
-                        app:chipCornerRadius="12dp"
-                        app:chipStrokeWidth="0dp" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/Widget.MaterialComponents.Chip.Action"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Photography"
-                        app:chipBackgroundColor="#FFF0F5"
-                        app:chipCornerRadius="12dp"
-                        app:chipStrokeWidth="0dp" />
-
-                    <com.google.android.material.chip.Chip
-                        style="@style/Widget.MaterialComponents.Chip.Action"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Travel"
                         app:chipBackgroundColor="#FFF0F5"
                         app:chipCornerRadius="12dp"
                         app:chipStrokeWidth="0dp" />
+
                 </com.google.android.material.chip.ChipGroup>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
@@ -268,18 +249,17 @@
                         android:layout_height="40dp"
                         android:padding="8dp"
                         android:background="@drawable/bg_avatar_circle"
-                        android:backgroundTint="#FFF0F5"
+                        android:backgroundTint="#F5F5F5"
                         android:src="@drawable/ic_arrow_right"
-                        app:tint="@color/pink_primary" />
+                        app:tint="@color/text_secondary" />
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="16dp"
                         android:layout_weight="1"
                         android:text="Logout"
-                        android:textColor="@color/pink_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
                 </LinearLayout>
 
             </LinearLayout>

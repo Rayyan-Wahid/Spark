@@ -17,6 +17,8 @@ public class ProfileModel {
     private List<String> matchedUserIds;
     private List<String> likedByUids; // UIDs of users who liked this user
     private String gender;
+    private double latitude;
+    private double longitude;
 
     public ProfileModel() {
         // Required for Firebase
@@ -95,4 +97,10 @@ public class ProfileModel {
 
     public String getGender() { return gender; }
     public void setGender(String gender) { this.gender = gender; }
+
+    public double getLatitude() { return latitude; }
+    public void setLatitude(double latitude) { this.latitude = latitude; }
+
+    public double getLongitude() { return longitude; }
+    public void setLongitude(double longitude) { this.longitude = longitude; }
 }

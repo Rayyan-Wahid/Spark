@@ -55,7 +55,7 @@ public class ViewProfileActivity extends AppCompatActivity {
 
         initUI();
         fetchProfileData();
-        checkIfAlreadyMatched();
+        checkButtonState();
     }
 
     private void initUI() {
@@ -105,18 +105,40 @@ public class ViewProfileActivity extends AppCompatActivity {
         });
     }
 
-    private void checkIfAlreadyMatched() {
+    /** Single method that sets the correct button state based on match + pending like. */
+    private void checkButtonState() {
+        // Check if already matched
         mDatabase.child("users").child(currentUserId).child("matchedUserIds").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     if (otherUserId.equals(ds.getValue(String.class))) {
-                        btnMatch.setText("Already Matched");
+                        btnMatch.setText("Already Matched 💞");
                         btnMatch.setEnabled(false);
                         btnMatch.setAlpha(0.7f);
-                        break;
+                        return;
                     }
                 }
+                // Not matched — check if we already liked them (pending)
+                mDatabase.child("users").child(otherUserId).child("likedByUids").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot ds : snapshot.getChildren()) {
+                            if (currentUserId.equals(ds.getValue(String.class))) {
+                                btnMatch.setText("Like Pending ⏳");
+                                btnMatch.setEnabled(false);
+                                btnMatch.setAlpha(0.7f);
+                                return;
+                            }
+                        }
+                        // Not matched, not pending — allow action
+                        btnMatch.setText("Send Like 💖");
+                        btnMatch.setEnabled(true);
+                        btnMatch.setAlpha(1f);
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
@@ -160,8 +182,11 @@ public class ViewProfileActivity extends AppCompatActivity {
                 if (theyLikedMe) {
                     addMatchToBothUsers();
                 } else {
-                    Toast.makeText(ViewProfileActivity.this, "Like sent!", Toast.LENGTH_SHORT).show();
-                    finish();
+                    // Show pending state without finishing
+                    btnMatch.setText("Like Pending ⏳");
+                    btnMatch.setEnabled(false);
+                    btnMatch.setAlpha(0.7f);
+                    Toast.makeText(ViewProfileActivity.this, "Like sent! Waiting for them to like back.", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -221,7 +246,10 @@ public class ViewProfileActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError error) {}
         });
 
-        Toast.makeText(this, "It's a Mutual Match!", Toast.LENGTH_LONG).show();
+        // Mark matched user as seen so they are excluded from Home/Discover swipe queue
+        mDatabase.child("users").child(currentUserId).child("seenUids").push().setValue(otherUserId);
+
+        Toast.makeText(this, "It's a Mutual Match! 💞", Toast.LENGTH_LONG).show();
         finish();
     }
 

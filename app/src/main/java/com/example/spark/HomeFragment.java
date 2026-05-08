@@ -3,7 +3,9 @@ package com.example.spark;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +19,12 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
+import com.firebase.geofire.GeoQuery;
+import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -27,9 +34,15 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public class HomeFragment extends Fragment {
+
+    private static final String TAG = "HomeFragment";
+    private static final double RADIUS_KM = 20.0;
 
     private MaterialCardView profileCard;
     private ImageView ivProfileImage;
@@ -42,8 +55,12 @@ public class HomeFragment extends Fragment {
     private List<ProfileModel> profileList = new ArrayList<>();
     private int currentIndex = 0;
     private ProfileModel currentProfile;
-    private List<String> myMatches = new ArrayList<>();
+    private Set<String> seenUids = new HashSet<>();
     private boolean isAnimating = false;
+
+    private GeoQuery geoQuery;
+    private ValueEventListener myLocationListener;
+    private DatabaseReference myUserRef;
 
     @Nullable
     @Override
@@ -53,7 +70,6 @@ public class HomeFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        // Initialize UI
         profileCard = view.findViewById(R.id.profile_card);
         profileCard.setOnClickListener(v -> {
             if (currentProfile != null) {
@@ -72,10 +88,8 @@ public class HomeFragment extends Fragment {
         btnDislike = view.findViewById(R.id.btn_dislike);
         btnLike = view.findViewById(R.id.btn_like);
 
-        // Fetch My Current Matches First
-        fetchMyMatches();
+        loadNearbyProfiles();
 
-        // Action Listeners
         btnRewind.setOnClickListener(v -> skipProfile());
         btnDislike.setOnClickListener(v -> dislikeProfile());
         btnLike.setOnClickListener(v -> likeProfile());
@@ -83,27 +97,119 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    private void fetchMyMatches() {
+    /** Load my location from Firebase, then run a 20km GeoFire query. */
+    private void loadNearbyProfiles() {
+        if (mAuth.getCurrentUser() == null) return;
         String myId = mAuth.getCurrentUser().getUid();
-        mDatabase.child("users").child(myId).child("matchedUserIds").addListenerForSingleValueEvent(new ValueEventListener() {
+
+        // First load all seenUids (matched + passed + disliked)
+        mDatabase.child("users").child(myId).child("seenUids").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (!isAdded()) return;
-                myMatches.clear();
+                seenUids.clear();
+                seenUids.add(myId); // always exclude self
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    String matchId = ds.getValue(String.class);
-                    if (matchId != null) myMatches.add(matchId);
+                    String uid = ds.getValue(String.class);
+                    if (uid != null) seenUids.add(uid);
                 }
-                fetchProfiles();
+                // Also exclude already matched
+                mDatabase.child("users").child(myId).child("matchedUserIds").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snap) {
+                        if (!isAdded()) return;
+                        for (DataSnapshot ds : snap.getChildren()) {
+                            String uid = ds.getValue(String.class);
+                            if (uid != null) seenUids.add(uid);
+                        }
+                        fetchMyLocation(myId);
+                    }
+                    @Override public void onCancelled(@NonNull DatabaseError e) {}
+                });
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            @Override public void onCancelled(@NonNull DatabaseError e) {}
         });
     }
 
-    private void fetchProfiles() {
-        String myId = mAuth.getCurrentUser().getUid();
+    private void fetchMyLocation(String myId) {
+        myUserRef = mDatabase.child("users").child(myId);
+        myLocationListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
+                Double lat = snapshot.child("latitude").getValue(Double.class);
+                Double lng = snapshot.child("longitude").getValue(Double.class);
+                if (lat == null || lng == null) {
+                    Log.w(TAG, "Location not set — loading all profiles.");
+                    fallbackLoadAll(myId);
+                    return;
+                }
+                runGeoQuery(myId, lat, lng);
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Location read cancelled: " + error.getMessage());
+            }
+        };
+        myUserRef.addListenerForSingleValueEvent(myLocationListener);
+    }
+
+    private void runGeoQuery(String myId, double myLat, double myLng) {
+        if (!isAdded()) return;
+        if (geoQuery != null) geoQuery.removeAllListeners();
+
+        DatabaseReference geoRef = mDatabase.getRoot().child("geofire");
+        GeoFire geoFire = new GeoFire(geoRef);
+        geoQuery = geoFire.queryAtLocation(new GeoLocation(myLat, myLng), RADIUS_KM);
+
+        profileList.clear();
+        currentIndex = 0;
+
+        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
+            @Override
+            public void onKeyEntered(String uid, GeoLocation location) {
+                if (!isAdded() || seenUids.contains(uid)) return;
+
+                mDatabase.child("users").child(uid).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (!isAdded()) return;
+                        ProfileModel profile = snapshot.getValue(ProfileModel.class);
+                        if (profile == null || !profile.isProfileCompleted()) return;
+
+                        float[] results = new float[1];
+                        Location.distanceBetween(myLat, myLng,
+                                location.latitude, location.longitude, results);
+                        int distKm = Math.round(results[0] / 1000f);
+                        profile.setDistance(String.format(Locale.getDefault(), "%d km away", distKm));
+
+                        for (ProfileModel p : profileList) {
+                            if (p.getId() != null && p.getId().equals(uid)) return;
+                        }
+                        profileList.add(profile);
+                        if (profileList.size() == 1) showNextProfile();
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+            }
+            @Override public void onKeyExited(String uid) {}
+            @Override public void onKeyMoved(String uid, GeoLocation location) {}
+            @Override
+            public void onGeoQueryReady() {
+                if (isAdded() && profileList.isEmpty()) {
+                    profileCard.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), "No nearby profiles right now!", Toast.LENGTH_LONG).show();
+                }
+            }
+            @Override
+            public void onGeoQueryError(DatabaseError error) {
+                Log.e(TAG, "GeoQuery error: " + error.getMessage());
+            }
+        });
+    }
+
+    private void fallbackLoadAll(String myId) {
         mDatabase.child("users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -111,48 +217,55 @@ public class HomeFragment extends Fragment {
                 profileList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     ProfileModel profile = ds.getValue(ProfileModel.class);
-                    if (profile != null && !profile.getId().equals(myId) 
-                        && profile.isProfileCompleted() && !myMatches.contains(profile.getId())) {
+                    if (profile != null && profile.isProfileCompleted()
+                            && !seenUids.contains(profile.getId())) {
                         profileList.add(profile);
                     }
                 }
+                currentIndex = 0;
                 showNextProfile();
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            @Override public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    /** Mark a UID as seen so it is never shown again. */
+    private void markSeen(String uid) {
+        if (mAuth.getCurrentUser() == null) return;
+        String myId = mAuth.getCurrentUser().getUid();
+        seenUids.add(uid);
+        mDatabase.child("users").child(myId).child("seenUids").push().setValue(uid);
     }
 
     private void showNextProfile() {
         if (currentIndex < profileList.size()) {
             currentProfile = profileList.get(currentIndex);
-            currentIndex++; // Increment only when we are actually picking the next one
+            currentIndex++; 
             
             profileCard.setVisibility(View.VISIBLE);
             
-            // Reset position before showing
             profileCard.setTranslationX(0);
             profileCard.setTranslationY(1000);
             profileCard.setRotation(0);
             profileCard.setAlpha(0);
             
-            // Update UI with new profile
             tvName.setText(currentProfile.getName() + ", " + currentProfile.getAge());
             tvBio.setText(currentProfile.getBio());
             tvDistance.setText(currentProfile.getDistance() != null ? currentProfile.getDistance() : "Near you");
 
-            // Update interests chips
             if (chipGroupInterests != null) {
                 chipGroupInterests.removeAllViews();
                 if (currentProfile.getInterests() != null) {
-                    for (String interest : currentProfile.getInterests()) {
-                        com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(getContext());
-                        chip.setText(interest);
-                        chip.setChipBackgroundColorResource(R.color.white);
-                        chip.setTextColor(getResources().getColor(R.color.pink_primary));
-                        chip.setChipCornerRadius(20f);
+                    int max = Math.min(currentProfile.getInterests().size(), 2);
+                    for (int i = 0; i < max; i++) {
+                        Chip chip = new Chip(getContext());
+                        chip.setText(currentProfile.getInterests().get(i));
+                        chip.setChipBackgroundColorResource(R.color.pink_primary);
+                        chip.setTextColor(getResources().getColor(R.color.white));
                         chip.setChipStrokeWidth(0f);
+                        chip.setTextSize(10f);
+                        chip.setClickable(false);
+                        chip.setFocusable(false);
                         chipGroupInterests.addView(chip);
                     }
                 }
@@ -168,7 +281,6 @@ public class HomeFragment extends Fragment {
                 ivProfileImage.setImageResource(R.drawable.heart);
             }
 
-            // Animate card in from bottom
             profileCard.animate()
                     .translationY(0)
                     .alpha(1)
@@ -183,7 +295,6 @@ public class HomeFragment extends Fragment {
                     .start();
             
         } else {
-            // No more profiles
             isAnimating = false;
             profileCard.setVisibility(View.GONE);
             Toast.makeText(getContext(), "No more profiles for now!", Toast.LENGTH_LONG).show();
@@ -193,11 +304,11 @@ public class HomeFragment extends Fragment {
     private void likeProfile() {
         if (currentProfile == null || isAnimating) return;
         isAnimating = true;
-        
+
         String myId = mAuth.getCurrentUser().getUid();
         String otherId = currentProfile.getId();
+        markSeen(otherId);
 
-        // 1. Add me to the other user's "likedByUids" list
         mDatabase.child("users").child(otherId).child("likedByUids").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -206,14 +317,12 @@ public class HomeFragment extends Fragment {
                     String id = ds.getValue(String.class);
                     if (id != null) likedByList.add(id);
                 }
-                
+
                 if (!likedByList.contains(myId)) {
                     likedByList.add(myId);
                     mDatabase.child("users").child(otherId).child("likedByUids").setValue(likedByList);
                 }
 
-                // 2. Check if I am already in the other user's "likedByUids" (This means they already liked me)
-                // Actually, the logic should be: Check if otherId is in MY "likedByUids"
                 checkForMutualMatch(myId, otherId);
             }
 
@@ -223,7 +332,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Animation: Slide Out Right
         profileCard.animate()
                 .translationX(1000)
                 .rotation(30)
@@ -238,7 +346,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void checkForMutualMatch(String myId, String otherId) {
-        // Check if the other user has already liked me
         mDatabase.child("users").child(myId).child("likedByUids").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -262,7 +369,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void addMatchToBothUsers(String myId, String otherId) {
-        // Add otherId to my matches
         mDatabase.child("users").child(myId).child("matchedUserIds").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -280,7 +386,6 @@ public class HomeFragment extends Fragment {
             public void onCancelled(@NonNull DatabaseError error) {}
         });
 
-        // Add myId to other user's matches
         mDatabase.child("users").child(otherId).child("matchedUserIds").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -304,8 +409,8 @@ public class HomeFragment extends Fragment {
     private void dislikeProfile() {
         if (currentProfile == null || isAnimating) return;
         isAnimating = true;
+        markSeen(currentProfile.getId());
 
-        // Animation: Slide Out Left
         profileCard.animate()
                 .translationX(-1000)
                 .rotation(-30)
@@ -322,7 +427,9 @@ public class HomeFragment extends Fragment {
     private void skipProfile() {
         if (currentProfile == null || isAnimating) return;
         isAnimating = true;
+        // Skip = requeue at end of local list only (not marked as permanently seen)
 
+        ProfileModel skipped = currentProfile;
         profileCard.animate()
                 .translationY(-1000)
                 .alpha(0)
@@ -330,10 +437,21 @@ public class HomeFragment extends Fragment {
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        // Add current back to end of list to "push to last"
-                        profileList.add(currentProfile);
+                        profileList.add(skipped);
                         showNextProfile();
                     }
                 }).start();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (geoQuery != null) {
+            geoQuery.removeAllListeners();
+            geoQuery = null;
+        }
+        if (myUserRef != null && myLocationListener != null) {
+            myUserRef.removeEventListener(myLocationListener);
+        }
     }
 }

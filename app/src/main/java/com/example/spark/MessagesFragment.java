@@ -32,6 +32,11 @@ public class MessagesFragment extends Fragment {
     private List<ChatModel> chatList;
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
+    // Persistent listeners tracked for cleanup
+    private ValueEventListener conversationsListener;
+    private ValueEventListener matchedIdsListener;
+    private DatabaseReference conversationsRef;
+    private DatabaseReference matchedIdsRef;
 
     @Nullable
     @Override
@@ -41,7 +46,6 @@ public class MessagesFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        // New Matches RecyclerView
         RecyclerView rvNewMatches = view.findViewById(R.id.rv_new_matches);
         rvNewMatches.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
 
@@ -49,7 +53,6 @@ public class MessagesFragment extends Fragment {
         matchAdapter = new NewMatchAdapter(matchList, new NewMatchAdapter.OnMatchClickListener() {
             @Override
             public void onShowProfile(ProfileModel profile) {
-                // To be implemented: View Profile
                 Toast.makeText(getContext(), "Showing profile: " + profile.getName(), Toast.LENGTH_SHORT).show();
             }
 
@@ -64,7 +67,6 @@ public class MessagesFragment extends Fragment {
         });
         rvNewMatches.setAdapter(matchAdapter);
 
-        // Conversations RecyclerView
         RecyclerView rvConversations = view.findViewById(R.id.rv_conversations);
         rvConversations.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -78,12 +80,23 @@ public class MessagesFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (conversationsRef != null && conversationsListener != null) {
+            conversationsRef.removeEventListener(conversationsListener);
+        }
+        if (matchedIdsRef != null && matchedIdsListener != null) {
+            matchedIdsRef.removeEventListener(matchedIdsListener);
+        }
+    }
+
     private void fetchConversations() {
         if (mAuth.getCurrentUser() == null) return;
         String myId = mAuth.getCurrentUser().getUid();
 
-        // Directly listen to the 'messages' node to extract conversations
-        mDatabase.child("messages").addValueEventListener(new ValueEventListener() {
+        conversationsRef = mDatabase.child("messages");
+        conversationsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (!isAdded()) return;
@@ -91,10 +104,8 @@ public class MessagesFragment extends Fragment {
                 for (DataSnapshot chatRoomSnapshot : snapshot.getChildren()) {
                     String chatRoomId = chatRoomSnapshot.getKey();
                     if (chatRoomId != null && chatRoomId.contains(myId)) {
-                        // This room belongs to me. Find the other user's ID
                         String otherUserId = chatRoomId.replace(myId, "").replace("_", "");
-                        
-                        // Get the last message in this room
+
                         DataSnapshot lastMsgSnapshot = null;
                         for (DataSnapshot msg : chatRoomSnapshot.getChildren()) {
                             lastMsgSnapshot = msg;
@@ -103,11 +114,8 @@ public class MessagesFragment extends Fragment {
                         if (lastMsgSnapshot != null) {
                             MessageModel lastMsg = lastMsgSnapshot.getValue(MessageModel.class);
                             if (lastMsg != null) {
-                                // Create a placeholder chat model
                                 ChatModel chat = new ChatModel("Loading...", 0, lastMsg.getText(), "", false, otherUserId);
                                 chatList.add(chat);
-                                
-                                // Fetch the actual profile details for this user
                                 fetchProfileDetailsForChat(chat, otherUserId);
                             }
                         }
@@ -118,7 +126,8 @@ public class MessagesFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+        conversationsRef.addValueEventListener(conversationsListener);
     }
 
     private void fetchProfileDetailsForChat(ChatModel chat, String otherUserId) {
@@ -144,8 +153,8 @@ public class MessagesFragment extends Fragment {
         if (mAuth.getCurrentUser() == null) return;
         String myId = mAuth.getCurrentUser().getUid();
 
-        // ONLY show users who are mutual matches (both liked each other)
-        mDatabase.child("users").child(myId).child("matchedUserIds").addValueEventListener(new ValueEventListener() {
+        matchedIdsRef = mDatabase.child("users").child(myId).child("matchedUserIds");
+        matchedIdsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (!isAdded()) return;
@@ -161,21 +170,18 @@ public class MessagesFragment extends Fragment {
                     return;
                 }
 
-                // Now filter out users with whom we already have a conversation
                 mDatabase.child("messages").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot messagesSnapshot) {
                         if (!isAdded()) return;
                         matchList.clear();
                         for (String id : matchIds) {
-                            // Deterministic conversation ID logic
                             List<String> pair = new ArrayList<>();
                             pair.add(myId);
                             pair.add(id);
                             java.util.Collections.sort(pair);
                             String convId = pair.get(0) + "_" + pair.get(1);
 
-                            // If conversation DOES NOT exist, add to New Matches
                             if (!messagesSnapshot.hasChild(convId)) {
                                 fetchProfileForNewMatch(id);
                             }
@@ -189,7 +195,8 @@ public class MessagesFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+        matchedIdsRef.addValueEventListener(matchedIdsListener);
     }
 
     private void fetchProfileForNewMatch(String userId) {

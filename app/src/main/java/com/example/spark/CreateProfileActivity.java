@@ -39,6 +39,8 @@ import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,7 +78,7 @@ public class CreateProfileActivity extends AppCompatActivity {
                         ivProfilePic.setImageURI(selectedImageUri);
                         ivProfilePic.setPadding(0, 0, 0, 0);
                         ivProfilePic.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        ivProfilePic.setImageTintList(null); // Remove any tint
+                        ivProfilePic.setImageTintList(null);
                     }
                 }
             }
@@ -85,10 +87,7 @@ public class CreateProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Hide System UI for Immersive Mode
         hideSystemUI();
-
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_create_profile);
 
@@ -101,7 +100,6 @@ public class CreateProfileActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        // Initialize UI
         etFullName = findViewById(R.id.et_full_name);
         etAge = findViewById(R.id.et_age);
         etBio = findViewById(R.id.et_bio);
@@ -122,7 +120,6 @@ public class CreateProfileActivity extends AppCompatActivity {
             fetchExistingData();
         }
 
-        // Pre-fill name if available
         if (mAuth.getCurrentUser() != null && !isEditMode) {
             etFullName.setText(mAuth.getCurrentUser().getDisplayName());
         }
@@ -153,24 +150,24 @@ public class CreateProfileActivity extends AppCompatActivity {
                     switchPublic.setChecked(profile.isPublic());
                     existingImageUrl = profile.getProfileImageUrl();
 
-                    // Set gender
                     if (profile.getGender() != null) {
                         if (profile.getGender().equals("Male")) rgGender.check(R.id.rb_male);
                         else if (profile.getGender().equals("Female")) rgGender.check(R.id.rb_female);
                         else rgGender.check(R.id.rb_other);
                     }
 
-                    // Pre-select interests
                     if (profile.getInterests() != null) {
                         for (int i = 0; i < chipGroupInterests.getChildCount(); i++) {
-                            Chip chip = (Chip) chipGroupInterests.getChildAt(i);
-                            if (profile.getInterests().contains(chip.getText().toString())) {
-                                chip.setChecked(true);
+                            View child = chipGroupInterests.getChildAt(i);
+                            if (child instanceof Chip) {
+                                Chip chip = (Chip) child;
+                                if (profile.getInterests().contains(chip.getText().toString())) {
+                                    chip.setChecked(true);
+                                }
                             }
                         }
                     }
 
-                    // Load image
                     if (existingImageUrl != null && !existingImageUrl.isEmpty()) {
                         com.bumptech.glide.Glide.with(this)
                                 .load(existingImageUrl)
@@ -194,19 +191,16 @@ public class CreateProfileActivity extends AppCompatActivity {
     }
 
     private void setupInterests() {
-        // Add common interests
         for (String interest : commonInterests) {
             addChipToGroup(interest, false);
         }
 
-        // Add "Add Custom" button chip
         Chip addCustomChip = new Chip(this);
         addCustomChip.setText("+ Add Custom");
         addCustomChip.setChipBackgroundColorResource(R.color.bg_color);
         addCustomChip.setTextColor(ContextCompat.getColor(this, R.color.pink_primary));
         addCustomChip.setChipStrokeColorResource(R.color.pink_primary);
         addCustomChip.setChipStrokeWidth(2f);
-        
         addCustomChip.setOnClickListener(v -> showAddCustomInterestDialog());
         chipGroupInterests.addView(addCustomChip);
     }
@@ -216,8 +210,6 @@ public class CreateProfileActivity extends AppCompatActivity {
         chip.setText(interest);
         chip.setCheckable(true);
         chip.setChecked(isChecked);
-        
-        // Style based on initial state
         updateChipStyle(chip, isChecked);
 
         chip.setOnCheckedChangeListener((buttonView, checked) -> {
@@ -229,7 +221,6 @@ public class CreateProfileActivity extends AppCompatActivity {
             updateChipStyle(chip, checked);
         });
 
-        // Add before the "+ Add Custom" chip
         int childCount = chipGroupInterests.getChildCount();
         chipGroupInterests.addView(chip, childCount > 0 ? childCount - 1 : 0);
         
@@ -269,7 +260,6 @@ public class CreateProfileActivity extends AppCompatActivity {
                 .setPositiveButton("Add", (dialog, which) -> {
                     String custom = etCustomInterest.getText().toString().trim();
                     if (!TextUtils.isEmpty(custom)) {
-                        // Check if already exists in selected list or common list to avoid duplicates
                         boolean exists = false;
                         for (int i = 0; i < chipGroupInterests.getChildCount(); i++) {
                             View view = chipGroupInterests.getChildAt(i);
@@ -334,15 +324,11 @@ public class CreateProfileActivity extends AppCompatActivity {
         showLoading(true);
         String userId = mAuth.getCurrentUser().getUid();
 
-        // Run in background to avoid blocking UI thread
         new Thread(() -> {
             try {
-                // Convert URI to Bitmap and compress
                 Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
-                
-                // Resize if too large
-                int maxWidth = 400;
-                int maxHeight = 400;
+                int maxWidth = 1024;
+                int maxHeight = 1024;
                 if (bitmap.getWidth() > maxWidth || bitmap.getHeight() > maxHeight) {
                     float ratio = Math.min((float) maxWidth / bitmap.getWidth(), (float) maxHeight / bitmap.getHeight());
                     int width = Math.round(ratio * bitmap.getWidth());
@@ -351,7 +337,7 @@ public class CreateProfileActivity extends AppCompatActivity {
                 }
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 70, baos); // 70% quality for smaller size
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
                 byte[] b = baos.toByteArray();
                 String base64Image = "data:image/jpeg;base64," + Base64.encodeToString(b, Base64.NO_WRAP);
                 String gender = getSelectedGender();
@@ -377,8 +363,6 @@ public class CreateProfileActivity extends AppCompatActivity {
 
     private void saveProfileToDatabase(String userId, String name, int age, String bio, String imageUrl, String gender) {
         boolean isPublic = switchPublic.isChecked();
-        
-        // Creating the full profile model with all info and UID
         ProfileModel profile = new ProfileModel(userId, name, age, bio, selectedInterests, isPublic, imageUrl, gender);
         profile.setProfileCompleted(true);
 
@@ -386,9 +370,34 @@ public class CreateProfileActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     showLoading(false);
                     if (task.isSuccessful()) {
+                        // Write location to GeoFire (only if lat/lng were seeded for this user)
+                        mDatabase.child("users").child(userId).child("latitude")
+                                .get().addOnSuccessListener(latSnap -> {
+                            mDatabase.child("users").child(userId).child("longitude")
+                                    .get().addOnSuccessListener(lngSnap -> {
+                                Double lat = latSnap.getValue(Double.class);
+                                Double lng = lngSnap.getValue(Double.class);
+                                if (lat != null && lng != null) {
+                                    DatabaseReference geoFireRef =
+                                            FirebaseDatabase.getInstance().getReference("geofire");
+                                    GeoFire geoFire = new GeoFire(geoFireRef);
+                                    geoFire.setLocation(userId, new GeoLocation(lat, lng),
+                                            (key, error) -> {
+                                                if (error != null) {
+                                                    android.util.Log.e("GeoFire",
+                                                            "GeoFire write failed: " + error.getMessage());
+                                                } else {
+                                                    android.util.Log.d("GeoFire",
+                                                            "Location saved for " + key);
+                                                }
+                                            });
+                                }
+                            });
+                        });
+
                         String msg = isEditMode ? "Profile Updated Successfully!" : "Profile Completed Successfully!";
                         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-                        
+
                         if (!isEditMode) {
                             Intent intent = new Intent(CreateProfileActivity.this, DashboardActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

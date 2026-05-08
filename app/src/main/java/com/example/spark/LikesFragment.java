@@ -29,6 +29,8 @@ public class LikesFragment extends Fragment {
     private List<ProfileModel> profileList;
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
+    private ValueEventListener likesListener;
+    private DatabaseReference likesRef;
 
     @Nullable
     @Override
@@ -60,53 +62,82 @@ public class LikesFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (likesRef != null && likesListener != null) {
+            likesRef.removeEventListener(likesListener);
+        }
+    }
+
     private void fetchLikedByProfiles() {
         if (mAuth.getCurrentUser() == null) return;
         String myId = mAuth.getCurrentUser().getUid();
 
-        mDatabase.child("users").child(myId).child("likedByUids").addValueEventListener(new ValueEventListener() {
+        likesRef = mDatabase.child("users").child(myId).child("likedByUids");
+        likesListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
                 profileList.clear();
-                List<String> userIds = new ArrayList<>();
+                List<String> likedByIds = new ArrayList<>();
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     String userId = ds.getValue(String.class);
-                    if (userId != null) userIds.add(userId);
+                    if (userId != null) likedByIds.add(userId);
                 }
 
-                if (userIds.isEmpty()) {
+                if (likedByIds.isEmpty()) {
                     adapter.notifyDataSetChanged();
                     return;
                 }
 
-                for (String id : userIds) {
-                    mDatabase.child("users").child(id).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot userSnapshot) {
-                            ProfileModel profile = userSnapshot.getValue(ProfileModel.class);
-                            if (profile != null) {
-                                boolean exists = false;
-                                for (ProfileModel p : profileList) {
-                                    if (p.getId().equals(profile.getId())) {
-                                        exists = true;
-                                        break;
+                // Fetch current matchedUserIds to exclude already-matched
+                mDatabase.child("users").child(myId).child("matchedUserIds")
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot matchSnap) {
+                        if (!isAdded()) return;
+                        java.util.Set<String> matchedSet = new java.util.HashSet<>();
+                        for (DataSnapshot ds : matchSnap.getChildren()) {
+                            String uid = ds.getValue(String.class);
+                            if (uid != null) matchedSet.add(uid);
+                        }
+
+                        for (String id : likedByIds) {
+                            if (matchedSet.contains(id)) continue; // skip already matched
+                            mDatabase.child("users").child(id).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot userSnapshot) {
+                                    if (!isAdded()) return;
+                                    ProfileModel profile = userSnapshot.getValue(ProfileModel.class);
+                                    if (profile != null) {
+                                        boolean exists = false;
+                                        for (ProfileModel p : profileList) {
+                                            if (p.getId() != null && p.getId().equals(profile.getId())) {
+                                                exists = true;
+                                                break;
+                                            }
+                                        }
+                                        if (!exists) {
+                                            profileList.add(profile);
+                                            adapter.notifyDataSetChanged();
+                                        }
                                     }
                                 }
-                                if (!exists) {
-                                    profileList.add(profile);
-                                    adapter.notifyDataSetChanged();
-                                }
-                            }
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {}
+                            });
                         }
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError error) {}
-                    });
-                }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
-        });
+        };
+        likesRef.addValueEventListener(likesListener);
     }
 
     private void handleMatch(ProfileModel otherUser) {
@@ -117,10 +148,13 @@ public class LikesFragment extends Fragment {
         addMatch(myId, otherId);
         addMatch(otherId, myId);
 
+        // Mark as seen for Home/Discover so they never show in swipe queue
+        mDatabase.child("users").child(myId).child("seenUids").push().setValue(otherId);
+
         // Remove from my likedByUids
         removeFromLikes(myId, otherId);
-        
-        Toast.makeText(getContext(), "It's a Match!", Toast.LENGTH_SHORT).show();
+
+        Toast.makeText(getContext(), "It's a Match! 💞", Toast.LENGTH_SHORT).show();
     }
 
     private void handleDecline(ProfileModel otherUser) {

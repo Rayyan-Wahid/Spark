@@ -52,26 +52,78 @@
 
             <EditText
                 android:id="@+id/et_discover_search"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="match_parent"
                 android:layout_marginStart="8dp"
                 android:background="@android:color/transparent"
                 android:hint="Search by name or interest..."
                 android:inputType="text"
                 android:textSize="13sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_near_me"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Near me"
+                android:textColor="@color/pink_primary"
+                android:textSize="12sp"
+                android:padding="0dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"/>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
+
+    <!-- Gender Filter Chips -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_gender_filter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:paddingVertical="2dp"
+        app:chipSpacingHorizontal="8dp"
+        app:selectionRequired="true"
+        app:singleSelection="true"
+        app:layout_constraintTop_toBottomOf="@id/search_bar">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_filter_male"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Male"
+            android:textSize="13sp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_filter_female"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Female"
+            android:textSize="13sp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_filter_nonbinary"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Non-binary"
+            android:textSize="13sp" />
+
+    </com.google.android.material.chip.ChipGroup>
 
     <!-- RecyclerView for Profiles -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_discover"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:clipToPadding="false"
         android:paddingBottom="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/search_bar"
+        app:layout_constraintTop_toBottomOf="@id/chip_group_gender_filter"
         tools:listitem="@layout/item_discover_profile" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -31,6 +31,8 @@ public class ProfileFragment extends Fragment {
     private ChipGroup chipGroupInterests;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
+    private ValueEventListener profileListener;
+    private DatabaseReference profileRef;
 
     @Nullable
     @Override
@@ -71,7 +73,7 @@ public class ProfileFragment extends Fragment {
         if (activity != null) {
             FirebaseAuth.getInstance().signOut();
             Intent intent = new Intent(activity, AuthActivity.class);
-            intent.putExtra("TARGET_TAB", 0); // 0 is LoginFragment
+            intent.putExtra("TARGET_TAB", 0);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(intent);
             activity.finish();
@@ -82,7 +84,8 @@ public class ProfileFragment extends Fragment {
         if (mAuth.getCurrentUser() == null) return;
 
         String userId = mAuth.getCurrentUser().getUid();
-        mDatabase.child("users").child(userId).addValueEventListener(new ValueEventListener() {
+        profileRef = mDatabase.child("users").child(userId);
+        profileListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -95,9 +98,20 @@ public class ProfileFragment extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(getContext(), "Failed to load profile", Toast.LENGTH_SHORT).show();
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Failed to load profile", Toast.LENGTH_SHORT).show();
+                }
             }
-        });
+        };
+        profileRef.addValueEventListener(profileListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (profileRef != null && profileListener != null) {
+            profileRef.removeEventListener(profileListener);
+        }
     }
 
     private void updateUI(ProfileModel profile) {
@@ -117,14 +131,12 @@ public class ProfileFragment extends Fragment {
             tvAboutMe.setText("No bio provided yet.");
         }
         
-        // Show short bio summary (e.g., first interest or role)
         if (profile.getInterests() != null && !profile.getInterests().isEmpty()) {
             tvBioSummary.setText(profile.getInterests().get(0) + " Enthusiast");
         } else {
             tvBioSummary.setText("Spark Member");
         }
 
-        // Load profile image
         if (profile.getProfileImageUrl() != null && !profile.getProfileImageUrl().isEmpty()) {
             if (ivProfilePic != null) {
                 Glide.with(this)
@@ -138,7 +150,6 @@ public class ProfileFragment extends Fragment {
             if (ivProfilePic != null) ivProfilePic.setImageResource(R.drawable.heart);
         }
 
-        // Update interests chips
         if (chipGroupInterests != null) {
             chipGroupInterests.removeAllViews();
             if (profile.getInterests() != null) {

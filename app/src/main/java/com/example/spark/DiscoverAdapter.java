@@ -1,18 +1,20 @@
 package com.example.spark;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 
 import java.util.List;
-
-import android.content.Intent;
 
 public class DiscoverAdapter extends RecyclerView.Adapter<DiscoverAdapter.ViewHolder> {
     private List<ProfileModel> profileList;
@@ -44,7 +46,7 @@ public class DiscoverAdapter extends RecyclerView.Adapter<DiscoverAdapter.ViewHo
         ProfileModel profile = profileList.get(position);
         holder.tvNameAge.setText(profile.getName() + ", " + profile.getAge());
         holder.tvDistance.setText(profile.getDistance() != null ? profile.getDistance() : "Near you");
-        
+
         if (profile.getProfileImageUrl() != null && !profile.getProfileImageUrl().isEmpty()) {
             Glide.with(holder.itemView.getContext())
                     .load(profile.getProfileImageUrl())
@@ -55,9 +57,28 @@ public class DiscoverAdapter extends RecyclerView.Adapter<DiscoverAdapter.ViewHo
             holder.ivProfile.setImageResource(profile.getImageResId() != 0 ? profile.getImageResId() : R.drawable.heart);
         }
 
-        holder.btnLike.setOnClickListener(v -> {
-            if (actionListener != null) actionListener.onLike(profile);
-        });
+
+        holder.chipGroupInterests.removeAllViews();
+        if (profile.getInterests() != null) {
+            int max = Math.min(profile.getInterests().size(), 2);
+            for (int i = 0; i < max; i++) {
+                Chip chip = new Chip(holder.itemView.getContext());
+                String text = profile.getInterests().get(i);
+                // Truncate long text so both chips fit in one line
+                if (text.length() > 8) text = text.substring(0, 7) + "…";
+                chip.setText(text);
+                chip.setChipBackgroundColorResource(R.color.pink_primary);
+                chip.setTextColor(holder.itemView.getContext().getResources().getColor(R.color.white));
+                chip.setChipStrokeWidth(0f);
+                chip.setTextSize(10f);
+                chip.setClickable(false);
+                chip.setFocusable(false);
+                chip.setEnsureMinTouchTargetSize(false);
+                chip.setChipMinHeight(0f);
+                holder.chipGroupInterests.addView(chip);
+            }
+        }
+
 
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), ViewProfileActivity.class);
@@ -75,13 +96,14 @@ public class DiscoverAdapter extends RecyclerView.Adapter<DiscoverAdapter.ViewHo
         ImageView ivProfile;
         TextView tvNameAge, tvDistance;
         View btnLike;
+        ChipGroup chipGroupInterests;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             ivProfile = itemView.findViewById(R.id.iv_profile);
             tvNameAge = itemView.findViewById(R.id.tv_name_age);
             tvDistance = itemView.findViewById(R.id.tv_distance);
-            btnLike = itemView.findViewById(R.id.btn_like_container);
+            chipGroupInterests = itemView.findViewById(R.id.chip_group_interests);
         }
     }
 }

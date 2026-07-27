@@ -97,7 +97,6 @@ public class HomeFragment extends Fragment {
         return view;
     }
 
-    /** Load my location from Firebase, then run a 20km GeoFire query. */
     private void loadNearbyProfiles() {
         if (mAuth.getCurrentUser() == null) return;
         String myId = mAuth.getCurrentUser().getUid();
@@ -229,7 +228,6 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    /** Mark a UID as seen so it is never shown again. */
     private void markSeen(String uid) {
         if (mAuth.getCurrentUser() == null) return;
         String myId = mAuth.getCurrentUser().getUid();

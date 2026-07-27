@@ -106,8 +106,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Setup Creative Gradient for Spark Text
-        android.widget.TextView appNameText = findViewById(R.id.app_name_text);
+
+        TextView appNameText = findViewById(R.id.app_name_text);
         
         if (appNameText != null) {
             appNameText.post(() -> applyGradient(appNameText));

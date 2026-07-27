@@ -1,12 +1,42 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="pink_primary">#FF4081</color>
-    <color name="pink_soft">#FFF5F8</color>
-    <color name="pink_border">#FFE4E9</color>
-    <color name="pink_light">#FF80AB</color>
-    <color name="bg_color">#FDFDFD</color>
-    <color name="text_primary">#212121</color>
-    <color name="text_secondary">#757575</color>
-</resources>
+<?xml version="1.0" encoding="utf-8"?> 
+ <resources> 
+     <color name="black">#FF000000</color> 
+     <color name="white">#FFFFFFFF</color> 
+ 
+     <!-- Core brand --> 
+     <color name="pink_primary">#FF2D6E</color> 
+     <color name="pink_deep">#C2185B</color> 
+     <color name="pink_glow">#FF6B9D</color> 
+     <color name="pink_soft">#FFF0F4</color> 
+     <color name="pink_border">#FFCCD8</color> 
+     <color name="pink_light">#FFB3C6</color> 
+ 
+     <!-- Backgrounds --> 
+     <color name="bg_color">#FFFFFF</color> 
+     <color name="bg_surface">#FFF7F9</color> 
+     <color name="bg_card">#FFFFFF</color> 
+ 
+     <!-- Gradient stops --> 
+     <color name="gradient_start">#FF2D6E</color> 
+     <color name="gradient_mid">#FF6B9D</color> 
+     <color name="gradient_end">#FFB3C6</color> 
+ 
+     <!-- Overlay for profile images --> 
+     <color name="image_scrim_top">#00000000</color> 
+     <color name="image_scrim_bottom">#CC000000</color> 
+ 
+     <!-- Text --> 
+     <color name="text_primary">#1A1A2E</color> 
+     <color name="text_secondary">#6B6B80</color> 
+     <color name="text_on_pink">#FFFFFF</color> 
+     <color name="text_on_card">#1A1A2E</color> 
+ 
+     <!-- Actions --> 
+     <color name="like_green">#00C853</color> 
+     <color name="dislike_red">#FF1744</color> 
+     <color name="superlike_blue">#2979FF</color> 
+ 
+     <!-- Shadows and accents --> 
+     <color name="card_shadow">#1AFF2D6E</color> 
+     <color name="ripple_pink">#33FF2D6E</color> 
+ </resources> 

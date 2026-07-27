@@ -16,7 +16,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Modern Floating Bottom Navigation -->
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/bottom_nav_card"
         android:layout_width="match_parent"

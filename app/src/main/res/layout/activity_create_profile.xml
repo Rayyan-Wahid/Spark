@@ -7,7 +7,6 @@
     android:background="#4A148C"
     tools:context=".CreateProfileActivity">
 
-    <!-- Top Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -57,7 +56,6 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
-    <!-- Header Section -->
     <LinearLayout
         android:id="@+id/header_section"
         android:layout_width="match_parent"
